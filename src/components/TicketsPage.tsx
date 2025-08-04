@@ -104,6 +104,8 @@ export default function TicketsPage() {
         
         if (!user.providerId) {
           console.error('[ERROR] Provider user does not have providerId assigned');
+          console.log('[ERROR] User object:', user);
+          alert('Erro: Usuário provider não tem provedor associado. Entre em contato com o administrador.');
           setTickets([]);
           setLoading(false);
           return;
