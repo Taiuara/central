@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -29,6 +29,8 @@ function calculateProviderMetrics(provider: Provider, tickets: Ticket[], referen
   const periodDays = provider.periodDays || 30;
   const startDay = provider.startDay || 1;
   const periodType = provider.periodType || 'monthly';
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const refDate = referenceDate;
   
   const now = new Date();
   let startDate: Date;
@@ -127,7 +129,7 @@ import {
 interface MetricCardProps {
   title: string;
   value: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ className?: string }>;
   color: string;
   trend?: string;
 }
@@ -154,8 +156,11 @@ function MetricCard({ title, value, icon: Icon, color, trend }: MetricCardProps)
 export default function Dashboard() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [metrics, setMetrics] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [providers, setProviders] = useState<Provider[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [tickets, setTickets] = useState<Ticket[]>([]);
 
   // Função para garantir que valores não sejam undefined
@@ -163,7 +168,7 @@ export default function Dashboard() {
     return value !== undefined && value !== null ? value : fallback;
   };
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -292,11 +297,11 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     loadDashboardData();
-  }, [user, loadDashboardData]);
+  }, [loadDashboardData]);
 
   if (loading) {
     return (

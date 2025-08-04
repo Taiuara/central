@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { collection, getDocs, query, where, getDoc, doc, QuerySnapshot, DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -28,7 +28,7 @@ export default function ReportsPage() {
     endDate: new Date().toISOString().split('T')[0]
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -92,11 +92,11 @@ export default function ReportsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser]);
 
   useEffect(() => {
     fetchData();
-  }, [currentUser, fetchData]);
+  }, [fetchData]);
 
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('pt-BR', { 
