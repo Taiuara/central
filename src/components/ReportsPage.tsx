@@ -140,10 +140,12 @@ export default function ReportsPage() {
       const n2Tickets = providerTickets.filter(t => t.level === 'N2').length;
       const massiveTickets = providerTickets.filter(t => t.level === 'Massivo').length;
       const salesTickets = providerTickets.filter(t => t.level === 'Venda');
+      const preSalesTickets = providerTickets.filter(t => t.level === 'Pré-Venda').length;
       
       const fixedValue = provider.fixedValue || 0;
       console.log('[DEBUG] Provider fixed value:', fixedValue);
-      const ticketsValue = (n1Tickets * (provider.valueN1 || 0)) + (n2Tickets * (provider.valueN2 || 0));
+      // Pré-Venda usa o mesmo valor do N1
+      const ticketsValue = (n1Tickets * (provider.valueN1 || 0)) + (n2Tickets * (provider.valueN2 || 0)) + (preSalesTickets * (provider.valueN1 || 0));
       const salesValue = salesTickets.reduce((total, ticket) => total + (ticket.saleValue || 0), 0) * (provider.salesCommission || 0) / 100;
       const massiveValue = massiveTickets * (provider.valueMassive || 0);
       const totalValue = fixedValue + ticketsValue + salesValue + massiveValue;
@@ -157,6 +159,7 @@ export default function ReportsPage() {
           n2Tickets,
           massiveTickets,
           salesTickets: salesTickets.length,
+          preSalesTickets,
           fixedValue,
           ticketsValue,
           salesValue,
@@ -179,6 +182,7 @@ export default function ReportsPage() {
       'Total de Chamados': item.metrics.totalTickets,
       'Chamados N1': item.metrics.n1Tickets,
       'Chamados N2': item.metrics.n2Tickets,
+      'Pré-Vendas': item.metrics.preSalesTickets,
       'Chamados Massivos': item.metrics.massiveTickets,
       'Vendas': item.metrics.salesTickets,
       'Valor Fixo': item.metrics.fixedValue,

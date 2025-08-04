@@ -6,6 +6,7 @@ export interface CalculationResult {
   n2Tickets: number;
   massiveTickets: number;
   salesTickets: number;
+  preSalesTickets: number;
   fixedValue: number;
   ticketsValue: number;
   salesValue: number;
@@ -21,9 +22,11 @@ export function calculateProviderMetrics(provider: Provider, tickets: Ticket[], 
   const n2Tickets = periodTickets.filter(t => t.level === 'N2').length;
   const massiveTickets = periodTickets.filter(t => t.level === 'Massivo').length;
   const salesTickets = periodTickets.filter(t => t.level === 'Venda').length;
+  const preSalesTickets = periodTickets.filter(t => t.level === 'Pré-Venda').length;
 
   const fixedValue = provider.fixedValue || 0;
-  const ticketsValue = (n1Tickets * (provider.valueN1 || 0)) + (n2Tickets * (provider.valueN2 || 0));
+  // Pré-Venda usa o mesmo valor do N1
+  const ticketsValue = (n1Tickets * (provider.valueN1 || 0)) + (n2Tickets * (provider.valueN2 || 0)) + (preSalesTickets * (provider.valueN1 || 0));
   const salesValue = periodTickets
     .filter(t => t.level === 'Venda')
     .reduce((total, ticket) => total + (ticket.saleValue || 0), 0) * (provider.salesCommission || 0) / 100;
@@ -36,6 +39,7 @@ export function calculateProviderMetrics(provider: Provider, tickets: Ticket[], 
     n2Tickets,
     massiveTickets,
     salesTickets,
+    preSalesTickets,
     fixedValue,
     ticketsValue,
     salesValue,

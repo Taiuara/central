@@ -92,10 +92,12 @@ function calculateProviderMetrics(provider: Provider, tickets: Ticket[], referen
   const n2Tickets = periodTickets.filter(t => t.level === 'N2').length;
   const massiveTickets = periodTickets.filter(t => t.level === 'Massivo').length;
   const salesTickets = periodTickets.filter(t => t.level === 'Venda');
+  const preSalesTickets = periodTickets.filter(t => t.level === 'Pré-Venda').length;
   
   const totalTickets = periodTickets.length;
   const fixedValue = provider.fixedValue || 0;
-  const ticketsValue = (n1Tickets * (provider.valueN1 || 0)) + (n2Tickets * (provider.valueN2 || 0));
+  // Pré-Venda usa o mesmo valor do N1
+  const ticketsValue = (n1Tickets * (provider.valueN1 || 0)) + (n2Tickets * (provider.valueN2 || 0)) + (preSalesTickets * (provider.valueN1 || 0));
   const salesValue = salesTickets.reduce((total: number, ticket: Ticket) => total + (ticket.saleValue || 0), 0) * (provider.salesCommission || 0) / 100;
   const exceedsFramework = massiveTickets * (provider.valueMassive || 0);
   const totalValue = fixedValue + ticketsValue + salesValue + exceedsFramework;
@@ -106,6 +108,7 @@ function calculateProviderMetrics(provider: Provider, tickets: Ticket[], referen
     n2Tickets,
     massiveTickets,
     salesTickets: salesTickets.length,
+    preSalesTickets,
     totalValue,
     fixedValue,
     ticketsValue,
@@ -221,6 +224,7 @@ export default function Dashboard() {
           n2Tickets: providerMetrics.reduce((sum, pm) => sum + pm.metrics.n2Tickets, 0),
           massiveTickets: providerMetrics.reduce((sum, pm) => sum + pm.metrics.massiveTickets, 0),
           salesTickets: providerMetrics.reduce((sum, pm) => sum + pm.metrics.salesTickets, 0),
+          preSalesTickets: providerMetrics.reduce((sum, pm) => sum + pm.metrics.preSalesTickets, 0),
         });
 
       } else if (user.role === 'provider') {
@@ -289,6 +293,7 @@ export default function Dashboard() {
           n2Tickets: ticketsData.filter(t => t.level === 'N2').length,
           massiveTickets: ticketsData.filter(t => t.level === 'Massivo').length,
           salesTickets: ticketsData.filter(t => t.level === 'Venda').length,
+          preSalesTickets: ticketsData.filter(t => t.level === 'Pré-Venda').length,
         });
       }
 
@@ -358,6 +363,10 @@ export default function Dashboard() {
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">N2</span>
               <span className="font-medium text-gray-900">{safeValue(metrics?.n2Tickets, 0)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Pré-Venda</span>
+              <span className="font-medium text-gray-900">{safeValue(metrics?.preSalesTickets, 0)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Massivo</span>
@@ -502,7 +511,7 @@ export default function Dashboard() {
 
       <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Resumo por Nível</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">{safeValue(metrics?.n1Tickets, 0)}</div>
             <div className="text-sm text-gray-600">N1</div>
@@ -510,6 +519,10 @@ export default function Dashboard() {
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">{safeValue(metrics?.n2Tickets, 0)}</div>
             <div className="text-sm text-gray-600">N2</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-cyan-600">{safeValue(metrics?.preSalesTickets, 0)}</div>
+            <div className="text-sm text-gray-600">Pré-Venda</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600">{safeValue(metrics?.massiveTickets, 0)}</div>

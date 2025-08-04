@@ -46,7 +46,7 @@ interface TicketFormData {
   whatsapp: string;
   protocol: string;
   attendanceDate: string;
-  level: 'N1' | 'N2' | 'Massivo' | 'Venda';
+  level: 'N1' | 'N2' | 'Massivo' | 'Venda' | 'Pré-Venda';
   description: string;
   saleValue?: number;
 }
@@ -322,6 +322,7 @@ export default function TicketsPage() {
               <option value="">Todos os níveis</option>
               <option value="N1">N1</option>
               <option value="N2">N2</option>
+              <option value="Pré-Venda">Pré-Venda</option>
               <option value="Massivo">Massivo</option>
               <option value="Venda">Venda</option>
             </select>
@@ -411,6 +412,7 @@ export default function TicketsPage() {
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       ticket.level === 'N1' ? 'bg-blue-100 text-blue-800' :
                       ticket.level === 'N2' ? 'bg-green-100 text-green-800' :
+                      ticket.level === 'Pré-Venda' ? 'bg-cyan-100 text-cyan-800' :
                       ticket.level === 'Massivo' ? 'bg-orange-100 text-orange-800' :
                       'bg-purple-100 text-purple-800'
                     }`}>
@@ -606,7 +608,7 @@ export default function TicketsPage() {
                       value={formData.level}
                       onChange={(e) => setFormData({ 
                         ...formData, 
-                        level: e.target.value as 'N1' | 'N2' | 'Massivo' | 'Venda',
+                        level: e.target.value as 'N1' | 'N2' | 'Massivo' | 'Venda' | 'Pré-Venda',
                         saleValue: e.target.value !== 'Venda' ? undefined : formData.saleValue
                       })}
                       required
@@ -615,6 +617,7 @@ export default function TicketsPage() {
                     >
                       <option value="N1">N1</option>
                       <option value="N2">N2</option>
+                      <option value="Pré-Venda">Pré-Venda</option>
                       <option value="Massivo">Massivo</option>
                       <option value="Venda">Venda</option>
                     </select>

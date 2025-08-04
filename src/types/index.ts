@@ -36,7 +36,7 @@ export interface Ticket {
   whatsapp: string;
   protocol: string;
   attendanceDate: Date;
-  level: 'N1' | 'N2' | 'Massivo' | 'Venda';
+  level: 'N1' | 'N2' | 'Massivo' | 'Venda' | 'Pré-Venda';
   description: string;
   saleValue?: number; // valor da venda (apenas para level === 'Venda')
   createdBy: string; // ID do usuário que criou
@@ -50,6 +50,7 @@ export interface DashboardMetrics {
   n2Tickets: number;
   massiveTickets: number;
   salesTickets: number;
+  preSalesTickets: number;
   totalValue: number;
   period: {
     startDate: Date;
