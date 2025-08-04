@@ -99,6 +99,16 @@ export default function TicketsPage() {
           orderBy('attendanceDate', 'desc')
         );
       } else if (user.role === 'provider') {
+        console.log('[DEBUG] Provider user:', user);
+        console.log('[DEBUG] Provider ID:', user.providerId);
+        
+        if (!user.providerId) {
+          console.error('[ERROR] Provider user does not have providerId assigned');
+          setTickets([]);
+          setLoading(false);
+          return;
+        }
+        
         ticketsQuery = query(
           collection(db, 'tickets'),
           where('providerId', '==', user.providerId),
@@ -119,6 +129,12 @@ export default function TicketsPage() {
         createdAt: doc.data().createdAt ? doc.data().createdAt.toDate() : new Date(),
         updatedAt: doc.data().updatedAt ? doc.data().updatedAt.toDate() : new Date(),
       })) as Ticket[];
+
+      console.log('[DEBUG] Total tickets loaded:', ticketsData.length);
+      if (user.role === 'provider') {
+        console.log('[DEBUG] Tickets for provider:', ticketsData);
+        console.log('[DEBUG] Sample ticket providerId:', ticketsData[0]?.providerId);
+      }
 
       setTickets(ticketsData);
     } catch (error) {
