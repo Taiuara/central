@@ -2,7 +2,7 @@
 
 Sistema de gestão de suporte técnico e vendas para provedores de internet, desenvolvido pela PingDesk.
 
-## 🚀 Funcionalidades
+## 🚀 Funcionalidades Principais
 
 ### Usuário Administrador
 - **Dashboard completo** com métricas de todos os provedores
