@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { collection, getDocs, query, where, getDoc, doc, QuerySnapshot, DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Provider, Ticket } from '@/types';
+import { calculateProviderMetrics } from '@/utils/calculations';
 import * as XLSX from 'xlsx';
 import { 
   Download, 
@@ -138,40 +139,14 @@ export default function ReportsPage() {
       const providerTickets = filteredTickets.filter(t => t.providerId === provider.id);
       console.log('[DEBUG] Provider tickets found:', providerTickets.length);
       
-      const n1Tickets = providerTickets.filter(t => t.level === 'N1').length;
-      const n2Tickets = providerTickets.filter(t => t.level === 'N2').length;
-      const massiveTickets = providerTickets.filter(t => t.level === 'Massivo').length;
-      const salesTickets = providerTickets.filter(t => t.level === 'Venda');
-      const preSalesTickets = providerTickets.filter(t => t.level === 'Pré-Venda').length;
-      
-      const fixedValue = provider.fixedValue || 0;
-      console.log('[DEBUG] Provider fixed value:', fixedValue);
-      // Pré-Venda usa o mesmo valor do N1
-      const ticketsValue = (n1Tickets * (provider.valueN1 || 0)) + (n2Tickets * (provider.valueN2 || 0)) + (preSalesTickets * (provider.valueN1 || 0));
-      console.log(`[DEBUG] ${provider.name} - N1: ${n1Tickets} x ${provider.valueN1} = ${n1Tickets * (provider.valueN1 || 0)}`);
-      console.log(`[DEBUG] ${provider.name} - N2: ${n2Tickets} x ${provider.valueN2} = ${n2Tickets * (provider.valueN2 || 0)}`);
-      console.log(`[DEBUG] ${provider.name} - Pré-Venda: ${preSalesTickets} x ${provider.valueN1} = ${preSalesTickets * (provider.valueN1 || 0)}`);
-      console.log(`[DEBUG] ${provider.name} - Total ticketsValue: ${ticketsValue}`);
-      const salesValue = salesTickets.reduce((total, ticket) => total + (ticket.saleValue || 0), 0) * (provider.salesCommission || 0) / 100;
-      const massiveValue = massiveTickets * (provider.valueMassive || 0);
-      const totalValue = fixedValue + ticketsValue + salesValue + massiveValue;
+      // Usar a função de cálculo unificada que já inclui Pré-Venda
+      const metrics = calculateProviderMetrics(provider, providerTickets);
+      console.log('[DEBUG] Calculated metrics:', metrics);
       
       return {
         provider,
         tickets: providerTickets,
-        metrics: {
-          totalTickets: providerTickets.length,
-          n1Tickets,
-          n2Tickets,
-          massiveTickets,
-          salesTickets: salesTickets.length,
-          preSalesTickets,
-          fixedValue,
-          ticketsValue,
-          salesValue,
-          massiveValue,
-          totalValue
-        }
+        metrics
       };
     });
 
