@@ -468,6 +468,10 @@ export default function Dashboard() {
               <span className="text-sm text-gray-600">Valor Vendas</span>
               <span className="font-medium text-gray-900">{formatCurrency(safeValue(metrics?.salesValue, 0))}</span>
             </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Valor Massivo</span>
+              <span className="font-medium text-gray-900">{formatCurrency(safeValue(metrics?.exceedsFramework, 0))}</span>
+            </div>
             <div className="border-t pt-3">
               <div className="flex justify-between items-center">
                 <span className="font-medium text-gray-900">Total</span>
