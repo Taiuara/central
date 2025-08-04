@@ -134,7 +134,9 @@ export default function ReportsPage() {
 
     const reportData = selectedProviders.map(provider => {
       console.log('[DEBUG] Processing provider:', provider);
+      console.log('[DEBUG] Provider values - N1:', provider.valueN1, 'N2:', provider.valueN2, 'Fixed:', provider.fixedValue);
       const providerTickets = filteredTickets.filter(t => t.providerId === provider.id);
+      console.log('[DEBUG] Provider tickets found:', providerTickets.length);
       
       const n1Tickets = providerTickets.filter(t => t.level === 'N1').length;
       const n2Tickets = providerTickets.filter(t => t.level === 'N2').length;
@@ -146,6 +148,10 @@ export default function ReportsPage() {
       console.log('[DEBUG] Provider fixed value:', fixedValue);
       // Pré-Venda usa o mesmo valor do N1
       const ticketsValue = (n1Tickets * (provider.valueN1 || 0)) + (n2Tickets * (provider.valueN2 || 0)) + (preSalesTickets * (provider.valueN1 || 0));
+      console.log(`[DEBUG] ${provider.name} - N1: ${n1Tickets} x ${provider.valueN1} = ${n1Tickets * (provider.valueN1 || 0)}`);
+      console.log(`[DEBUG] ${provider.name} - N2: ${n2Tickets} x ${provider.valueN2} = ${n2Tickets * (provider.valueN2 || 0)}`);
+      console.log(`[DEBUG] ${provider.name} - Pré-Venda: ${preSalesTickets} x ${provider.valueN1} = ${preSalesTickets * (provider.valueN1 || 0)}`);
+      console.log(`[DEBUG] ${provider.name} - Total ticketsValue: ${ticketsValue}`);
       const salesValue = salesTickets.reduce((total, ticket) => total + (ticket.saleValue || 0), 0) * (provider.salesCommission || 0) / 100;
       const massiveValue = massiveTickets * (provider.valueMassive || 0);
       const totalValue = fixedValue + ticketsValue + salesValue + massiveValue;
