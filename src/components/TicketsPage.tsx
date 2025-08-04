@@ -75,8 +75,6 @@ export default function TicketsPage() {
   const [levelFilter, setLevelFilter] = useState<string>('');
   const [providerFilter, setProviderFilter] = useState<string>('');
 
-  useEffect(() => {
-    loadData();
   const loadData = useCallback(async () => {
     if (!user) return;
 
