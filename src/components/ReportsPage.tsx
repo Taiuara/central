@@ -134,14 +134,10 @@ export default function ReportsPage() {
     console.log('[DEBUG] Current user providerId:', currentUser?.providerId);
 
     const reportData = selectedProviders.map(provider => {
-      console.log('[DEBUG] Processing provider:', provider);
-      console.log('[DEBUG] Provider values - N1:', provider.valueN1, 'N2:', provider.valueN2, 'Fixed:', provider.fixedValue);
       const providerTickets = filteredTickets.filter(t => t.providerId === provider.id);
-      console.log('[DEBUG] Provider tickets found:', providerTickets.length);
       
       // Usar a função de cálculo unificada que já inclui Pré-Venda
       const metrics = calculateProviderMetrics(provider, providerTickets);
-      console.log('[DEBUG] Calculated metrics:', metrics);
       
       return {
         provider,
