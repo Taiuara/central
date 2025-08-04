@@ -96,11 +96,11 @@ function calculateProviderMetrics(provider: Provider, tickets: Ticket[], referen
   
   const totalTickets = periodTickets.length;
   const fixedValue = provider.fixedValue || 0;
-  // Pré-Venda usa o mesmo valor do N1
-  const ticketsValue = (n1Tickets * (provider.valueN1 || 0)) + (n2Tickets * (provider.valueN2 || 0)) + (preSalesTickets * (provider.valueN1 || 0));
+  // Valor dos chamados inclui: N1 + N2 + Pré-Venda + Massivos
+  const ticketsValue = (n1Tickets * (provider.valueN1 || 0)) + (n2Tickets * (provider.valueN2 || 0)) + (preSalesTickets * (provider.valueN1 || 0)) + (massiveTickets * (provider.valueMassive || 0));
   const salesValue = salesTickets.reduce((total: number, ticket: Ticket) => total + (ticket.saleValue || 0), 0) * (provider.salesCommission || 0) / 100;
   const exceedsFramework = massiveTickets * (provider.valueMassive || 0);
-  const totalValue = fixedValue + ticketsValue + salesValue + exceedsFramework;
+  const totalValue = fixedValue + ticketsValue + salesValue;
   
   return {
     totalTickets,
@@ -428,6 +428,12 @@ export default function Dashboard() {
           icon={BarChart3}
           color="bg-orange-500"
         />
+        <MetricCard
+          title="Valor Vendas"
+          value={formatCurrency(metrics.salesValue)}
+          icon={DollarSign}
+          color="bg-green-500"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -467,10 +473,6 @@ export default function Dashboard() {
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Valor Vendas</span>
               <span className="font-medium text-gray-900">{formatCurrency(safeValue(metrics?.salesValue, 0))}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Valor Massivo</span>
-              <span className="font-medium text-gray-900">{formatCurrency(safeValue(metrics?.exceedsFramework, 0))}</span>
             </div>
             <div className="border-t pt-3">
               <div className="flex justify-between items-center">
