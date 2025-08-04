@@ -51,12 +51,21 @@ interface TicketFormData {
   saleValue?: number;
 }
 
+// Function to get today's date in local timezone as YYYY-MM-DD string
+const getTodayLocalDate = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const initialFormData: TicketFormData = {
   providerId: '',
   clientName: '',
   whatsapp: '',
   protocol: '',
-  attendanceDate: new Date().toISOString().split('T')[0],
+  attendanceDate: getTodayLocalDate(),
   level: 'N1',
   description: '',
   saleValue: undefined,
@@ -158,13 +167,21 @@ export default function TicketsPage() {
       const provider = providers.find(p => p.id === formData.providerId);
       if (!provider) return;
 
+      // Fix timezone issue: create date in local timezone instead of UTC
+      const dateParts = formData.attendanceDate.split('-');
+      const attendanceDate = new Date(
+        parseInt(dateParts[0]), // year
+        parseInt(dateParts[1]) - 1, // month (0-indexed)
+        parseInt(dateParts[2]) // day
+      );
+
       const ticketData = {
         providerId: formData.providerId,
         providerName: provider.name,
         clientName: formData.clientName,
         whatsapp: formData.whatsapp,
         protocol: formData.protocol,
-        attendanceDate: Timestamp.fromDate(new Date(formData.attendanceDate)),
+        attendanceDate: Timestamp.fromDate(attendanceDate),
         level: formData.level,
         description: formData.description,
         saleValue: formData.level === 'Venda' ? formData.saleValue : null,
@@ -193,12 +210,19 @@ export default function TicketsPage() {
 
   const handleEdit = (ticket: Ticket) => {
     setSelectedTicket(ticket);
+    
+    // Fix timezone issue: format date in local timezone
+    const year = ticket.attendanceDate.getFullYear();
+    const month = String(ticket.attendanceDate.getMonth() + 1).padStart(2, '0');
+    const day = String(ticket.attendanceDate.getDate()).padStart(2, '0');
+    const localDateString = `${year}-${month}-${day}`;
+    
     setFormData({
       providerId: ticket.providerId,
       clientName: ticket.clientName,
       whatsapp: ticket.whatsapp,
       protocol: ticket.protocol,
-      attendanceDate: ticket.attendanceDate.toISOString().split('T')[0],
+      attendanceDate: localDateString,
       level: ticket.level,
       description: ticket.description,
       saleValue: ticket.saleValue || undefined,

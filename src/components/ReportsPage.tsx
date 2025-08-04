@@ -111,12 +111,24 @@ export default function ReportsPage() {
   };
 
   const getFilteredTickets = () => {
-    const startDate = new Date(dateRange.startDate);
-    const endDate = new Date(dateRange.endDate);
+    // Fix timezone issue: create dates in local timezone instead of UTC
+    const startDateParts = dateRange.startDate.split('-');
+    const startDate = new Date(
+      parseInt(startDateParts[0]), // year
+      parseInt(startDateParts[1]) - 1, // month (0-indexed)
+      parseInt(startDateParts[2]) // day
+    );
+    
+    const endDateParts = dateRange.endDate.split('-');
+    const endDate = new Date(
+      parseInt(endDateParts[0]), // year
+      parseInt(endDateParts[1]) - 1, // month (0-indexed)
+      parseInt(endDateParts[2]) // day
+    );
     endDate.setHours(23, 59, 59, 999); // Final do dia
 
     return tickets.filter(ticket => {
-      const ticketDate = ticket.createdAt;
+      const ticketDate = ticket.attendanceDate; // Use attendanceDate instead of createdAt for filtering
       const dateInRange = ticketDate >= startDate && ticketDate <= endDate;
       const providerMatch = selectedProvider === 'all' || ticket.providerId === selectedProvider;
       return dateInRange && providerMatch;
