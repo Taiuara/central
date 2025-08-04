@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { collection, getDocs, query, where, Timestamp, getDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, where, getDoc, doc, QuerySnapshot, DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Provider, Ticket } from '@/types';
 import * as XLSX from 'xlsx';
 import { 
-  FileText, 
   Download, 
   Calendar, 
   Filter,
@@ -15,8 +14,7 @@ import {
   TrendingUp,
   DollarSign,
   Ticket as TicketIcon,
-  Building2,
-  Users
+  Building2
 } from 'lucide-react';
 
 export default function ReportsPage() {
@@ -30,16 +28,12 @@ export default function ReportsPage() {
     endDate: new Date().toISOString().split('T')[0]
   });
 
-  useEffect(() => {
-    fetchData();
-  }, [currentUser]);
-
   const fetchData = async () => {
     try {
       setLoading(true);
       
-      let providersSnap: any;
-      let ticketsSnap: any;
+      let providersSnap: QuerySnapshot<DocumentData> | { docs: { id: string; data: () => DocumentData }[] };
+      let ticketsSnap: QuerySnapshot<DocumentData>;
 
       // Se for provedor, filtrar apenas seus dados
       if (currentUser?.role === 'provider' && currentUser.providerId) {
@@ -74,21 +68,21 @@ export default function ReportsPage() {
         ]);
       }
 
-      const providersData = providersSnap.docs.map((doc: any) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
+      const providersData = providersSnap.docs.map((docSnap: { id: string; data: () => DocumentData }) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+        createdAt: docSnap.data().createdAt?.toDate(),
+        updatedAt: docSnap.data().updatedAt?.toDate(),
       })) as Provider[];
 
       console.log('[DEBUG] Final providers data:', providersData);
       
-      const ticketsData = ticketsSnap.docs.map((doc: any) => ({
-        id: doc.id,
-        ...doc.data(),
-        attendanceDate: doc.data().attendanceDate ? doc.data().attendanceDate.toDate() : null,
-        createdAt: doc.data().createdAt ? doc.data().createdAt.toDate() : new Date(),
-        updatedAt: doc.data().updatedAt ? doc.data().updatedAt.toDate() : new Date(),
+      const ticketsData = ticketsSnap.docs.map((docSnap: { id: string; data: () => DocumentData }) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+        attendanceDate: docSnap.data().attendanceDate ? docSnap.data().attendanceDate.toDate() : null,
+        createdAt: docSnap.data().createdAt ? docSnap.data().createdAt.toDate() : new Date(),
+        updatedAt: docSnap.data().updatedAt ? docSnap.data().updatedAt.toDate() : new Date(),
       })) as Ticket[];
 
       setProviders(providersData);
@@ -99,6 +93,10 @@ export default function ReportsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, [currentUser, fetchData]);
 
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('pt-BR', { 

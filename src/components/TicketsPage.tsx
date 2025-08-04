@@ -19,18 +19,11 @@ import { Provider, Ticket } from '@/types';
 // import { formatCurrency, formatDate } from '@/utils/calculations';
 
 // Funções temporárias inline
-function formatCurrency(value: number | null | undefined): string {
-  if (value == null || isNaN(value)) {
-    return 'R$ 0,00';
-  }
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-}
-
 function formatDate(date: Date | null | undefined): string {
   if (!date) return '';
   try {
     return new Intl.DateTimeFormat('pt-BR').format(date);
-  } catch (error) {
+  } catch {
     return '';
   }
 }

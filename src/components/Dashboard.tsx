@@ -19,12 +19,13 @@ function formatDate(date: Date | null | undefined): string {
   if (!date) return '';
   try {
     return new Intl.DateTimeFormat('pt-BR').format(date);
-  } catch (error) {
+  } catch {
     return '';
   }
 }
 
-function calculateProviderMetrics(provider: any, tickets: any[], referenceDate: Date = new Date()) {
+function calculateProviderMetrics(provider: Provider, tickets: Ticket[], referenceDate: Date = new Date()) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const periodDays = provider.periodDays || 30;
   const startDay = provider.startDay || 1;
   const periodType = provider.periodType || 'monthly';
@@ -93,7 +94,7 @@ function calculateProviderMetrics(provider: any, tickets: any[], referenceDate: 
   const totalTickets = periodTickets.length;
   const fixedValue = provider.fixedValue || 0;
   const ticketsValue = (n1Tickets * (provider.valueN1 || 0)) + (n2Tickets * (provider.valueN2 || 0));
-  const salesValue = salesTickets.reduce((total: number, ticket: any) => total + (ticket.saleValue || 0), 0) * (provider.salesCommission || 0) / 100;
+  const salesValue = salesTickets.reduce((total: number, ticket: Ticket) => total + (ticket.saleValue || 0), 0) * (provider.salesCommission || 0) / 100;
   const exceedsFramework = massiveTickets * (provider.valueMassive || 0);
   const totalValue = fixedValue + ticketsValue + salesValue + exceedsFramework;
   
@@ -158,13 +159,9 @@ export default function Dashboard() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
 
   // Função para garantir que valores não sejam undefined
-  const safeValue = (value: any, fallback: any = 0) => {
+  const safeValue = (value: number | undefined | null, fallback: number = 0) => {
     return value !== undefined && value !== null ? value : fallback;
   };
-
-  useEffect(() => {
-    loadDashboardData();
-  }, [user]);
 
   const loadDashboardData = async () => {
     if (!user) return;
@@ -297,6 +294,10 @@ export default function Dashboard() {
     }
   };
 
+  useEffect(() => {
+    loadDashboardData();
+  }, [user, loadDashboardData]);
+
   if (loading) {
     return (
       <div className="p-6">
@@ -367,7 +368,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Provedores</h3>
           <div className="space-y-3">
-            {metrics?.providerMetrics?.slice(0, 5).map(({ provider, metrics: providerMetrics }: any) => (
+            {metrics?.providerMetrics?.slice(0, 5).map(({ provider, metrics: providerMetrics }: { provider: Provider; metrics: typeof metrics }) => (
               <div key={provider.id} className="flex justify-between items-center">
                 <span className="text-sm text-gray-600 truncate">{provider.name}</span>
                 <span className="font-medium text-gray-900">{formatCurrency(safeValue(providerMetrics?.totalValue, 0))}</span>

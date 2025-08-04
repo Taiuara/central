@@ -2,185 +2,94 @@ import { Provider, Ticket } from '@/types';
 
 export interface CalculationResult {
   totalTickets: number;
-  nexport function calculateProviderMetrics(provider: Provider, tickets: Ticket[], referenceDate: Date = new Date()) {
-  const period = calculatePeriod(provider, referenceDate);
-  
-  // Debug para provedores específicos
-  if (provider.name === 'Bkup' || provider.name === 'Mynet') {
-    debugPeriodCalculation(provider, referenceDate);
-  }
-  
-  const periodTickets = filterTicketsByPeriod(tickets, period.startDate, period.endDate);ckets: number;
+  n1Tickets: number;
   n2Tickets: number;
   massiveTickets: number;
   salesTickets: number;
-  totalValue: number;
   fixedValue: number;
   ticketsValue: number;
   salesValue: number;
-  exceedsFramework: number;
-  period: {
-    startDate: Date;
-    endDate: Date;
-  };
+  massiveValue: number;
+  totalValue: number;
 }
 
-export function calculatePeriod(provider: Provider, referenceDate: Date = new Date()): { startDate: Date; endDate: Date } {
-  const currentYear = referenceDate.getFullYear();
-  const currentMonth = referenceDate.getMonth();
-  const currentDay = referenceDate.getDate();
-  
-  let startDate: Date;
-  let endDate: Date;
-
-  // Para provedores que fecham em dias específicos (como dia 28)
-  if (provider.startDay === provider.endDay) {
-    // Ciclo mensal - do dia X do mês anterior ao dia X do mês atual
-    if (currentDay >= provider.startDay) {
-      // Estamos no período atual
-      startDate = new Date(currentYear, currentMonth, provider.startDay);
-      endDate = new Date(currentYear, currentMonth + 1, provider.endDay, 23, 59, 59);
-    } else {
-      // Estamos antes do período atual
-      startDate = new Date(currentYear, currentMonth - 1, provider.startDay);
-      endDate = new Date(currentYear, currentMonth, provider.endDay, 23, 59, 59);
-    }
-  } else if (provider.startDay < provider.endDay) {
-    // Período dentro do mesmo mês
-    startDate = new Date(currentYear, currentMonth, provider.startDay);
-    endDate = new Date(currentYear, currentMonth, provider.endDay, 23, 59, 59);
-  } else {
-    // Período que cruza meses (startDay > endDay)
-    if (currentDay >= provider.startDay) {
-      // Período atual (do startDay deste mês ao endDay do próximo mês)
-      startDate = new Date(currentYear, currentMonth, provider.startDay);
-      
-      // Calcular endDate considerando variações de dias do mês
-      let nextMonth = currentMonth + 1;
-      let nextYear = currentYear;
-      
-      if (nextMonth > 11) {
-        nextMonth = 0;
-        nextYear++;
-      }
-      
-      // Ajustar endDay se o próximo mês não tiver dias suficientes
-      const daysInNextMonth = new Date(nextYear, nextMonth + 1, 0).getDate();
-      const adjustedEndDay = Math.min(provider.endDay, daysInNextMonth);
-      
-      endDate = new Date(nextYear, nextMonth, adjustedEndDay, 23, 59, 59);
-    } else {
-      // Período anterior (do startDay do mês anterior ao endDay deste mês)
-      let prevMonth = currentMonth - 1;
-      let prevYear = currentYear;
-      
-      if (prevMonth < 0) {
-        prevMonth = 11;
-        prevYear--;
-      }
-      
-      // Ajustar startDay se o mês anterior não tiver dias suficientes
-      const daysInPrevMonth = new Date(prevYear, prevMonth + 1, 0).getDate();
-      const adjustedStartDay = Math.min(provider.startDay, daysInPrevMonth);
-      
-      startDate = new Date(prevYear, prevMonth, adjustedStartDay);
-      
-      // Ajustar endDay se o mês atual não tiver dias suficientes  
-      const daysInCurrentMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-      const adjustedEndDay = Math.min(provider.endDay, daysInCurrentMonth);
-      
-      endDate = new Date(currentYear, currentMonth, adjustedEndDay, 23, 59, 59);
-    }
-  }
-
-  return { startDate, endDate };
-}
-
-// Função de debug para verificar cálculo de período
-export function debugPeriodCalculation(provider: Provider, referenceDate: Date = new Date()) {
-  const period = calculatePeriod(provider, referenceDate);
-  
-  console.log('🔍 Debug do cálculo de período:');
-  console.log('📅 Data de referência:', referenceDate.toLocaleDateString('pt-BR'));
-  console.log('🏢 Provedor:', provider.name);
-  console.log('📊 Config:', `startDay: ${provider.startDay}, endDay: ${provider.endDay}`);
-  console.log('⏰ Período calculado:');
-  console.log('  📅 Início:', period.startDate.toLocaleDateString('pt-BR'));
-  console.log('  📅 Fim:', period.endDate.toLocaleDateString('pt-BR'));
-  console.log('  📈 Duração (dias):', Math.ceil((period.endDate.getTime() - period.startDate.getTime()) / (1000 * 60 * 60 * 24)));
-  
-  return period;
-}
-
-export function filterTicketsByPeriod(tickets: Ticket[], startDate: Date, endDate: Date): Ticket[] {
-  return tickets.filter(ticket => {
-    const ticketDate = ticket.attendanceDate;
-    return ticketDate >= startDate && ticketDate <= endDate;
-  });
-}
-
-export function calculateProviderMetrics(provider: Provider, tickets: Ticket[], referenceDate?: Date): CalculationResult {
+export function calculateProviderMetrics(provider: Provider, tickets: Ticket[], referenceDate: Date = new Date()): CalculationResult {
   const period = calculatePeriod(provider, referenceDate);
   const periodTickets = filterTicketsByPeriod(tickets, period.startDate, period.endDate);
 
   const n1Tickets = periodTickets.filter(t => t.level === 'N1').length;
   const n2Tickets = periodTickets.filter(t => t.level === 'N2').length;
   const massiveTickets = periodTickets.filter(t => t.level === 'Massivo').length;
-  const salesTickets = periodTickets.filter(t => t.level === 'Venda');
+  const salesTickets = periodTickets.filter(t => t.level === 'Venda').length;
 
-  // Cálculo do valor dos atendimentos
-  let ticketsValue = 0;
-  let exceedsFramework = 0;
-
-  const franchiseTickets = n1Tickets + n2Tickets; // Massivo não entra na franquia
-  
-  if (provider.franchise > 0) {
-    // Tem franquia
-    if (franchiseTickets > provider.franchise) {
-      exceedsFramework = franchiseTickets - provider.franchise;
-      ticketsValue = exceedsFramework * ((n1Tickets > provider.franchise ? provider.valueN1 : 0) + 
-                                        (n2Tickets > (provider.franchise - n1Tickets) ? provider.valueN2 : 0));
-    }
-  } else {
-    // Sem franquia - cobra tudo
-    ticketsValue = (n1Tickets * provider.valueN1) + (n2Tickets * provider.valueN2);
-  }
-
-  // Adiciona atendimentos massivos (sempre cobrados)
-  ticketsValue += massiveTickets * provider.valueMassive;
-
-  // Cálculo das vendas
-  const salesValue = salesTickets.reduce((total, ticket) => {
-    if (ticket.saleValue) {
-      return total + (ticket.saleValue * provider.salesCommission / 100);
-    }
-    return total;
-  }, 0);
-
-  const totalValue = provider.fixedValue + ticketsValue + salesValue;
+  const fixedValue = provider.fixedValue || 0;
+  const ticketsValue = (n1Tickets * (provider.valueN1 || 0)) + (n2Tickets * (provider.valueN2 || 0));
+  const salesValue = periodTickets
+    .filter(t => t.level === 'Venda')
+    .reduce((total, ticket) => total + (ticket.saleValue || 0), 0) * (provider.salesCommission || 0) / 100;
+  const massiveValue = massiveTickets * (provider.valueMassive || 0);
+  const totalValue = fixedValue + ticketsValue + salesValue + massiveValue;
 
   return {
     totalTickets: periodTickets.length,
     n1Tickets,
     n2Tickets,
     massiveTickets,
-    salesTickets: salesTickets.length,
-    totalValue,
-    fixedValue: provider.fixedValue,
+    salesTickets,
+    fixedValue,
     ticketsValue,
     salesValue,
-    exceedsFramework,
-    period
+    massiveValue,
+    totalValue
   };
 }
 
+export function calculatePeriod(provider: Provider, referenceDate: Date = new Date()) {
+  const year = referenceDate.getFullYear();
+  const month = referenceDate.getMonth(); // 0-based
+  
+  if (provider.periodType === 'fixed') {
+    // Período fixo: usar startDay e periodDays
+    const startDay = provider.startDay || 1;
+    const periodDays = provider.periodDays || 30;
+    
+    // Calcular a data de início baseada no startDay
+    let startDate: Date;
+    if (referenceDate.getDate() >= startDay) {
+      // Se estamos no período atual
+      startDate = new Date(year, month, startDay);
+    } else {
+      // Se estamos no próximo período
+      startDate = new Date(year, month - 1, startDay);
+    }
+    
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + periodDays - 1);
+    
+    return { startDate, endDate };
+  } else {
+    // Período mensal: 1º ao último dia do mês
+    const startDate = new Date(year, month, 1);
+    const endDate = new Date(year, month + 1, 0); // Último dia do mês
+    
+    return { startDate, endDate };
+  }
+}
+
+export function filterTicketsByPeriod(tickets: Ticket[], startDate: Date, endDate: Date): Ticket[] {
+  return tickets.filter(ticket => {
+    const ticketDate = ticket.createdAt;
+    return ticketDate >= startDate && ticketDate <= endDate;
+  });
+}
+
 export function formatCurrency(value: number | null | undefined): string {
-  if (value === null || value === undefined || isNaN(value)) {
+  if (value == null || isNaN(value)) {
     return 'R$ 0,00';
   }
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
+  return new Intl.NumberFormat('pt-BR', { 
+    style: 'currency', 
+    currency: 'BRL' 
   }).format(value);
 }
 

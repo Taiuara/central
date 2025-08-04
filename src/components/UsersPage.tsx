@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc, Timestamp } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, deleteUser as deleteAuthUser } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { User, Provider } from '@/types';
 import { 
@@ -12,10 +12,8 @@ import {
   Edit, 
   Trash2, 
   Eye, 
-  EyeOff, 
   Search,
   Filter,
-  MoreVertical,
   X
 } from 'lucide-react';
 
@@ -166,7 +164,7 @@ export default function UsersPage() {
     if (!date) return '';
     try {
       return new Intl.DateTimeFormat('pt-BR').format(date);
-    } catch (error) {
+    } catch {
       return '';
     }
   };

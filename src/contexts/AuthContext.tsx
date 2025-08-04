@@ -114,19 +114,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log('✅ Login Firebase bem-sucedido:', result.user.uid);
       
       return result.user;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Erro no login:', error);
       
+      const firebaseError = error as { code?: string; message?: string };
+      
       // Mensagens de erro mais específicas
-      if (error.code === 'auth/user-not-found') {
+      if (firebaseError.code === 'auth/user-not-found') {
         throw new Error('Usuário não encontrado');
-      } else if (error.code === 'auth/wrong-password') {
+      } else if (firebaseError.code === 'auth/wrong-password') {
         throw new Error('Senha incorreta');
-      } else if (error.code === 'auth/invalid-email') {
+      } else if (firebaseError.code === 'auth/invalid-email') {
         throw new Error('Email inválido');
-      } else if (error.code === 'auth/too-many-requests') {
+      } else if (firebaseError.code === 'auth/too-many-requests') {
         throw new Error('Muitas tentativas. Tente novamente mais tarde');
-      } else if (error.message.includes('Firebase não configurado')) {
+      } else if (firebaseError.message?.includes('Firebase não configurado')) {
         throw new Error('Sistema não configurado. Entre em contato com o suporte');
       } else {
         throw new Error('Erro ao fazer login. Verifique suas credenciais');

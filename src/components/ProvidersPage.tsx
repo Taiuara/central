@@ -28,7 +28,7 @@ function formatDate(date: Date | null | undefined): string {
   if (!date) return '';
   try {
     return new Intl.DateTimeFormat('pt-BR').format(date);
-  } catch (error) {
+  } catch {
     return '';
   }
 }

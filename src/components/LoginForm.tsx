@@ -27,9 +27,10 @@ export default function LoginForm() {
       console.log('🔑 Chamando função de login...');
       await login(email, password);
       console.log('✅ Login finalizado com sucesso');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Erro no login (LoginForm):', error);
-      setError(error.message || 'Email ou senha incorretos');
+      const errorMessage = error instanceof Error ? error.message : 'Email ou senha incorretos';
+      setError(errorMessage);
     } finally {
       setLoading(false);
       console.log('🔄 Loading finalizado');
