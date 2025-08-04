@@ -1,0 +1,12 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="32" height="32" rx="6" fill="#3B82F6"/>
+  
+  <!-- WiFi waves -->
+  <path d="M20 20 Q14 14, 8 20" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M22 20 Q16 11, 8 20" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M24 20 Q16 8, 8 20" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+  
+  <!-- P icon as location pin -->
+  <circle cx="16" cy="18" r="6" fill="#6366F1"/>
+  <circle cx="16" cy="18" r="2.5" fill="white"/>
+</svg>
