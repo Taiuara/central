@@ -77,7 +77,7 @@ function calculateProviderMetrics(provider: Provider, tickets: Ticket[], referen
   
   // Filtrar tickets dentro do período calculado
   const periodTickets = tickets.filter(ticket => {
-    const ticketDate = ticket.createdAt?.toDate ? ticket.createdAt.toDate() : new Date(ticket.createdAt);
+    const ticketDate = ticket.createdAt instanceof Date ? ticket.createdAt : new Date(ticket.createdAt);
     // Para período fixo: startDate <= ticket < endDate (endDate é exclusive)
     // Para período mensal: startDate <= ticket <= endDate (endDate é inclusive)
     if (periodType === 'fixed') {
