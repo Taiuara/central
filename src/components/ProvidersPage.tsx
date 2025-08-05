@@ -14,6 +14,7 @@ import {
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { Provider } from '@/types';
+import { safeToDate } from '@/utils/dateUtils';
 // import { formatCurrency, formatDate } from '@/utils/calculations';
 
 // Funções temporárias inline
@@ -97,8 +98,8 @@ export default function ProvidersPage() {
       const providersData = providersSnap.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: doc.data().createdAt ? doc.data().createdAt.toDate() : new Date(),
-        updatedAt: doc.data().updatedAt ? doc.data().updatedAt.toDate() : new Date(),
+        createdAt: safeToDate(doc.data().createdAt),
+        updatedAt: safeToDate(doc.data().updatedAt),
       })) as Provider[];
       setProviders(providersData);
     } catch (error) {

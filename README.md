@@ -1,6 +1,25 @@
-# Central do Provedor - PingDesk
+# 🚀 Central do Provedor - PingDesk
 
 Sistema de gestão de suporte técnico e vendas para provedores de internet, desenvolvido pela PingDesk.
+
+<!-- FORCE DEPLOY: Sistema de franquia Bkup ativo - 2025-08-04 -->
+
+## 🌟 Deploy & Links
+- **� Repositório**: [GitHub - Taiuara/central](https://github.com/Taiuara/central)
+- **�🚀 Deploy**: [Configurar no Vercel](https://vercel.com) 
+- **📚 Guia**: [DEPLOY.md](./DEPLOY.md) - Instruções completas
+- **⚡ Script**: Execute `deploy.bat` (Windows) ou `deploy.sh` (Linux/Mac)
+
+## 🎯 Status do Projeto
+- ✅ **Produção Ready**: Sistema completo e testado
+- ✅ **Franquia Bkup**: Implementada (200 N1+N2)
+- ✅ **Firebase**: Configurado e funcionando
+- ✅ **Vercel**: Pronto para deploy automático
+
+## 🔑 Credenciais de Acesso
+```
+Admin: admin@pingdesk.com.br / admin123
+```
 
 ## 🚀 Funcionalidades Principais
 
@@ -203,7 +222,34 @@ npm run lint         # Executa o linter
 4. Push para a branch (\`git push origin feature/AmazingFeature\`)
 5. Abra um Pull Request
 
-## 📄 Licença
+## � Deploy no Vercel
+
+### Configuração das Variáveis de Ambiente
+No painel do Vercel, configure:
+
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyD8RqsjXByWhRYgRgGEJE19iXpk0J68tgc
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=central-provedor-35ef4.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=central-provedor-35ef4
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=central-provedor-35ef4.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=242631943904
+NEXT_PUBLIC_FIREBASE_APP_ID=1:242631943904:web:e14e01cac0e1ec83401285
+```
+
+### Deploy Automático
+1. Conecte este repositório ao Vercel
+2. Configure as variáveis de ambiente acima
+3. O deploy será automático a cada push na branch main
+
+### Status do Sistema
+✅ **Sistema pronto para produção**
+- Todas as funcionalidades testadas e validadas
+- Correções de timezone implementadas
+- Índices do Firestore otimizados
+- Sistema de conversão de datas robusto
+- Debug detalhado implementado
+
+## �📄 Licença
 
 Este projeto é propriedade da **PingDesk** - Todos os direitos reservados.
 

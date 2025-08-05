@@ -5,6 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Provider, Ticket } from '@/types';
+import { safeToDate, safeToAttendanceDate } from '@/utils/dateUtils';
+import { FORCE_REBUILD } from '@/constants/deploy';
+import { BUILD_VERSION } from '@/build';
 // import { calculateProviderMetrics, formatCurrency, formatDate } from '@/utils/calculations';
 
 // Funções temporárias inline
@@ -26,6 +29,7 @@ function formatDate(date: Date | null | undefined): string {
 
 function calculateProviderMetrics(provider: Provider, tickets: Ticket[], referenceDate: Date = new Date()) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  console.log('🚀 DEPLOY VERSION:', FORCE_REBUILD, 'BUILD:', BUILD_VERSION);
   const periodDays = provider.periodDays || 30;
   const startDay = provider.startDay || 1;
   const periodType = provider.periodType || 'monthly';
@@ -96,11 +100,97 @@ function calculateProviderMetrics(provider: Provider, tickets: Ticket[], referen
   
   const totalTickets = periodTickets.length;
   const fixedValue = provider.fixedValue || 0;
-  // Valor dos chamados inclui: N1 + N2 + Pré-Venda + Massivos
-  const ticketsValue = (n1Tickets * (provider.valueN1 || 0)) + (n2Tickets * (provider.valueN2 || 0)) + (preSalesTickets * (provider.valueN1 || 0)) + (massiveTickets * (provider.valueMassive || 0));
+  
+  // Aplicar regra da franquia: apenas contabilizar N1+N2 quando ultrapassar a franquia
+  const franchise = provider.franchise || 0;
+  const totalN1N2 = n1Tickets + n2Tickets;
+  let billableN1Tickets = 0;
+  let billableN2Tickets = 0;
+  
+  // Debug logs para Bkup
+  console.log('=== PROVIDER DEBUG ===', provider.name, provider.franchise);
+  console.log('🚀 FRANCHISE SYSTEM ACTIVE - v1.0.1');
+  if (provider.name && provider.name.toLowerCase().includes('bkup')) {
+    console.log('🔍 [BKUP DEBUG] Dados do provedor:', {
+      name: provider.name,
+      franchise: provider.franchise,
+      periodType: provider.periodType,
+      startDay: provider.startDay,
+      valueN1: provider.valueN1,
+      valueN2: provider.valueN2
+    });
+    console.log('🔍 [BKUP DEBUG] Tickets:', {
+      n1Tickets,
+      n2Tickets,
+      totalN1N2,
+      massiveTickets,
+      franchise
+    });
+  }
+  
+  if (franchise > 0) {
+    // Se há franquia, só contabiliza N1+N2 que excedem a franquia
+    const exceededTickets = Math.max(0, totalN1N2 - franchise);
+    if (provider.name && provider.name.toLowerCase().includes('bkup')) {
+      console.log('🔍 [BKUP DEBUG] Franquia aplicada:', {
+        franchise,
+        totalN1N2,
+        exceededTickets,
+        withinFranchise: exceededTickets === 0
+      });
+    }
+    
+    if (exceededTickets > 0) {
+      // Distribuir os tickets excedentes proporcionalmente entre N1 e N2
+      const n1Ratio = n1Tickets > 0 ? n1Tickets / totalN1N2 : 0;
+      const n2Ratio = n2Tickets > 0 ? n2Tickets / totalN1N2 : 0;
+      billableN1Tickets = Math.floor(exceededTickets * n1Ratio);
+      billableN2Tickets = Math.floor(exceededTickets * n2Ratio);
+      
+      if (provider.name && provider.name.toLowerCase().includes('bkup')) {
+        console.log('🔍 [BKUP DEBUG] Tickets cobráveis:', {
+          billableN1Tickets,
+          billableN2Tickets,
+          n1Ratio,
+          n2Ratio
+        });
+      }
+    } else if (provider.name && provider.name.toLowerCase().includes('bkup')) {
+      console.log('✅ [BKUP DEBUG] Dentro da franquia - N1 e N2 não cobráveis');
+    }
+  } else {
+    // Se não há franquia, contabiliza todos os N1 e N2
+    billableN1Tickets = n1Tickets;
+    billableN2Tickets = n2Tickets;
+    
+    if (provider.name && provider.name.toLowerCase().includes('bkup')) {
+      console.log('⚠️ [BKUP DEBUG] Sem franquia configurada - cobrando todos os tickets');
+    }
+  }
+  
+  // Massivos sempre contabilizam (antes e depois dos 200)
+  const ticketsValue = (billableN1Tickets * (provider.valueN1 || 0)) + 
+                      (billableN2Tickets * (provider.valueN2 || 0)) + 
+                      (preSalesTickets * (provider.valueN1 || 0)) + 
+                      (massiveTickets * (provider.valueMassive || 0));
+  
   const salesValue = salesTickets.reduce((total: number, ticket: Ticket) => total + (ticket.saleValue || 0), 0) * (provider.salesCommission || 0) / 100;
   const exceedsFramework = massiveTickets * (provider.valueMassive || 0);
   const totalValue = fixedValue + ticketsValue + salesValue;
+  
+  // Debug final para Bkup
+  if (provider.name && provider.name.toLowerCase().includes('bkup')) {
+    console.log('🔍 [BKUP DEBUG] Cálculo final:', {
+      fixedValue,
+      billableN1Value: billableN1Tickets * (provider.valueN1 || 0),
+      billableN2Value: billableN2Tickets * (provider.valueN2 || 0),
+      massiveValue: massiveTickets * (provider.valueMassive || 0),
+      ticketsValue,
+      salesValue,
+      totalValue
+    });
+    console.log('✅ [BKUP DEBUG] Resultado esperado para 30 N1+N2: R$ 1.100,00 (apenas fixo)');
+  }
   
   return {
     totalTickets,
@@ -187,16 +277,16 @@ export default function Dashboard() {
         const providersData = providersSnap.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate(),
-          updatedAt: doc.data().updatedAt?.toDate(),
+          createdAt: safeToDate(doc.data().createdAt),
+          updatedAt: safeToDate(doc.data().updatedAt),
         })) as Provider[];
 
         const ticketsData = ticketsSnap.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
-          attendanceDate: doc.data().attendanceDate ? doc.data().attendanceDate.toDate() : null,
-          createdAt: doc.data().createdAt ? doc.data().createdAt.toDate() : new Date(),
-          updatedAt: doc.data().updatedAt ? doc.data().updatedAt.toDate() : new Date(),
+          attendanceDate: safeToAttendanceDate(doc.data().attendanceDate),
+          createdAt: safeToDate(doc.data().createdAt),
+          updatedAt: safeToDate(doc.data().updatedAt),
         })) as Ticket[];
 
         setProviders(providersData);
@@ -235,8 +325,8 @@ export default function Dashboard() {
         const providerData = {
           id: providerDoc.id,
           ...providerDoc.data(),
-          createdAt: providerDoc.data()!.createdAt?.toDate(),
-          updatedAt: providerDoc.data()!.updatedAt?.toDate(),
+          createdAt: safeToDate(providerDoc.data()!.createdAt),
+          updatedAt: safeToDate(providerDoc.data()!.updatedAt),
         } as Provider;
 
         const ticketsQuery = query(
@@ -248,9 +338,9 @@ export default function Dashboard() {
         const ticketsData = ticketsSnap.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
-          attendanceDate: doc.data().attendanceDate ? doc.data().attendanceDate.toDate() : null,
-          createdAt: doc.data().createdAt ? doc.data().createdAt.toDate() : new Date(),
-          updatedAt: doc.data().updatedAt ? doc.data().updatedAt.toDate() : new Date(),
+          attendanceDate: safeToAttendanceDate(doc.data().attendanceDate),
+          createdAt: safeToDate(doc.data().createdAt),
+          updatedAt: safeToDate(doc.data().updatedAt),
         })) as Ticket[];
 
         setTickets(ticketsData);
@@ -268,9 +358,9 @@ export default function Dashboard() {
         const ticketsData = ticketsSnap.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
-          attendanceDate: doc.data().attendanceDate ? doc.data().attendanceDate.toDate() : null,
-          createdAt: doc.data().createdAt ? doc.data().createdAt.toDate() : new Date(),
-          updatedAt: doc.data().updatedAt ? doc.data().updatedAt.toDate() : new Date(),
+          attendanceDate: safeToAttendanceDate(doc.data().attendanceDate),
+          createdAt: safeToDate(doc.data().createdAt),
+          updatedAt: safeToDate(doc.data().updatedAt),
         })) as Ticket[];
 
         setTickets(ticketsData);

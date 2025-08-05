@@ -5,6 +5,7 @@ import { User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, s
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { AuthUser } from '@/types';
+import { safeToDate } from '@/utils/dateUtils';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -52,8 +53,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
               name: userData.name || '',
               role: userData.role || 'collaborator',
               providerId: userData.providerId,
-              createdAt: userData.createdAt?.toDate() || new Date(),
-              updatedAt: userData.updatedAt?.toDate() || new Date(),
+              createdAt: safeToDate(userData.createdAt) || new Date(),
+              updatedAt: safeToDate(userData.updatedAt) || new Date(),
             });
           } else {
             // Usuário não encontrado no Firestore - criar documento

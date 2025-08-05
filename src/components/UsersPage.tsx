@@ -16,6 +16,7 @@ import {
   Filter,
   X
 } from 'lucide-react';
+import { safeToDate } from '@/utils/dateUtils';
 
 export default function UsersPage() {
   const { user: currentUser } = useAuth();
@@ -47,32 +48,109 @@ export default function UsersPage() {
   const [formData, setFormData] = useState<UserFormData>(initialFormData);
 
   useEffect(() => {
+    console.log('[DEBUG] UsersPage useEffect triggered');
+    console.log('[DEBUG] Current user:', currentUser);
+    console.log('[DEBUG] Current user role:', currentUser?.role);
+    
     if (currentUser?.role === 'admin') {
+      console.log('[DEBUG] User is admin, fetching data...');
       fetchData();
+    } else {
+      console.log('[DEBUG] User is not admin, skipping data fetch');
     }
   }, [currentUser]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
+      console.log('[DEBUG] Fetching users and providers data...');
+      
       const [usersSnap, providersSnap] = await Promise.all([
         getDocs(collection(db, 'users')),
         getDocs(collection(db, 'providers'))
       ]);
 
-      const usersData = usersSnap.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
-      })) as User[];
+      console.log('[DEBUG] Users snapshot size:', usersSnap.size);
+      console.log('[DEBUG] Providers snapshot size:', providersSnap.size);
 
-      const providersData = providersSnap.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
-      })) as Provider[];
+      let usersData: User[] = [];
+      let providersData: Provider[] = [];
+
+      try {
+        console.log('[DEBUG] Processing users data...');
+        usersData = usersSnap.docs.map(doc => {
+          console.log('[DEBUG] User document:', doc.id, doc.data());
+          const data = doc.data();
+          console.log('[DEBUG] Raw user data fields:', Object.keys(data));
+          console.log('[DEBUG] Before safeToDate - createdAt:', data.createdAt, 'type:', typeof data.createdAt);
+          console.log('[DEBUG] Before safeToDate - updatedAt:', data.updatedAt, 'type:', typeof data.updatedAt);
+          
+          // Process each field individually to avoid spread conflicts
+          const processedUser = {
+            id: doc.id,
+            uid: data.uid || doc.id,
+            name: data.name || '',
+            email: data.email || '',
+            role: data.role || 'collaborator',
+            providerId: data.providerId || null,
+            createdAt: safeToDate(data.createdAt),
+            updatedAt: safeToDate(data.updatedAt),
+          };
+          
+          console.log('[DEBUG] After processing - createdAt:', processedUser.createdAt);
+          console.log('[DEBUG] After processing - updatedAt:', processedUser.updatedAt);
+          
+          return processedUser;
+        }) as User[];
+        console.log('[DEBUG] Users data processed successfully');
+      } catch (error) {
+        console.error('[DEBUG] Error processing users data:', error);
+        throw error;
+      }
+
+      try {
+        console.log('[DEBUG] Processing providers data...');
+        providersData = providersSnap.docs.map(doc => {
+          console.log('[DEBUG] Provider document:', doc.id, doc.data());
+          const data = doc.data();
+          console.log('[DEBUG] Raw provider data fields:', Object.keys(data));
+          console.log('[DEBUG] Provider Before safeToDate - createdAt:', data.createdAt, 'type:', typeof data.createdAt);
+          console.log('[DEBUG] Provider Before safeToDate - updatedAt:', data.updatedAt, 'type:', typeof data.updatedAt);
+          
+          // Process each field individually to avoid spread conflicts
+          const processedProvider = {
+            id: doc.id,
+            name: data.name || '',
+            cnpj: data.cnpj || '',
+            franchise: data.franchise || 0,
+            valueN1: data.valueN1 || 0,
+            valueN2: data.valueN2 || 0,
+            valueMassive: data.valueMassive || 0,
+            salesCommission: data.salesCommission || 0,
+            fixedValue: data.fixedValue || 0,
+            startDay: data.startDay || 1,
+            endDay: data.endDay || 30,
+            periodDays: data.periodDays || 30,
+            periodType: data.periodType || 'monthly',
+            email: data.email || '',
+            password: data.password || '',
+            createdAt: safeToDate(data.createdAt),
+            updatedAt: safeToDate(data.updatedAt),
+          };
+          
+          console.log('[DEBUG] Provider After processing - createdAt:', processedProvider.createdAt);
+          console.log('[DEBUG] Provider After processing - updatedAt:', processedProvider.updatedAt);
+          
+          return processedProvider;
+        }) as Provider[];
+        console.log('[DEBUG] Providers data processed successfully');
+      } catch (error) {
+        console.error('[DEBUG] Error processing providers data:', error);
+        throw error;
+      }
+
+      console.log('[DEBUG] Processed users data:', usersData);
+      console.log('[DEBUG] Processed providers data:', providersData);
 
       setUsers(usersData);
       setProviders(providersData);

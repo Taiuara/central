@@ -6,6 +6,7 @@ import { collection, getDocs, query, where, getDoc, doc, QuerySnapshot, Document
 import { db } from '@/lib/firebase';
 import { Provider, Ticket } from '@/types';
 import { calculateProviderMetrics } from '@/utils/calculations';
+import { safeToDate, safeToAttendanceDate } from '@/utils/dateUtils';
 import * as XLSX from 'xlsx';
 import { 
   Download, 
@@ -72,8 +73,8 @@ export default function ReportsPage() {
       const providersData = providersSnap.docs.map((docSnap: { id: string; data: () => DocumentData }) => ({
         id: docSnap.id,
         ...docSnap.data(),
-        createdAt: docSnap.data().createdAt?.toDate(),
-        updatedAt: docSnap.data().updatedAt?.toDate(),
+        createdAt: safeToDate(docSnap.data().createdAt),
+        updatedAt: safeToDate(docSnap.data().updatedAt),
       })) as Provider[];
 
       console.log('[DEBUG] Final providers data:', providersData);
@@ -81,9 +82,9 @@ export default function ReportsPage() {
       const ticketsData = ticketsSnap.docs.map((docSnap: { id: string; data: () => DocumentData }) => ({
         id: docSnap.id,
         ...docSnap.data(),
-        attendanceDate: docSnap.data().attendanceDate ? docSnap.data().attendanceDate.toDate() : null,
-        createdAt: docSnap.data().createdAt ? docSnap.data().createdAt.toDate() : new Date(),
-        updatedAt: docSnap.data().updatedAt ? docSnap.data().updatedAt.toDate() : new Date(),
+        attendanceDate: safeToAttendanceDate(docSnap.data().attendanceDate),
+        createdAt: safeToDate(docSnap.data().createdAt),
+        updatedAt: safeToDate(docSnap.data().updatedAt),
       })) as Ticket[];
 
       setProviders(providersData);

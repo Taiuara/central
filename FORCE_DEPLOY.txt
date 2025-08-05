@@ -1,0 +1,3 @@
+Deploy forçado em: 2025-08-04 - Sistema de franquia Bkup com debug logs universais
+Timestamp: ${new Date().toISOString()}
+Franchise debug: ACTIVE

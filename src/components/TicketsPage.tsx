@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Provider, Ticket } from '@/types';
+import { safeToDate, safeToAttendanceDate } from '@/utils/dateUtils';
 // import { formatCurrency, formatDate } from '@/utils/calculations';
 
 // Funções temporárias inline
@@ -95,8 +96,8 @@ export default function TicketsPage() {
       const providersData = providersSnap.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: doc.data().createdAt ? doc.data().createdAt.toDate() : new Date(),
-        updatedAt: doc.data().updatedAt ? doc.data().updatedAt.toDate() : new Date(),
+        createdAt: safeToDate(doc.data().createdAt),
+        updatedAt: safeToDate(doc.data().updatedAt),
       })) as Provider[];
       setProviders(providersData);
 
@@ -120,11 +121,14 @@ export default function TicketsPage() {
           return;
         }
         
+        console.log('[DEBUG] Creating optimized Firestore query with providerId:', user.providerId);
+        // Now using orderBy since composite index has been created
         ticketsQuery = query(
           collection(db, 'tickets'),
           where('providerId', '==', user.providerId),
           orderBy('attendanceDate', 'desc')
         );
+        console.log('[DEBUG] Optimized query created with orderBy, executing...');
       } else {
         ticketsQuery = query(
           collection(db, 'tickets'),
@@ -136,9 +140,9 @@ export default function TicketsPage() {
       const ticketsData = ticketsSnap.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        attendanceDate: doc.data().attendanceDate ? doc.data().attendanceDate.toDate() : null,
-        createdAt: doc.data().createdAt ? doc.data().createdAt.toDate() : new Date(),
-        updatedAt: doc.data().updatedAt ? doc.data().updatedAt.toDate() : new Date(),
+        attendanceDate: safeToAttendanceDate(doc.data().attendanceDate),
+        createdAt: safeToDate(doc.data().createdAt),
+        updatedAt: safeToDate(doc.data().updatedAt),
       })) as Ticket[];
 
       console.log('[DEBUG] Total tickets loaded:', ticketsData.length);
@@ -156,6 +160,10 @@ export default function TicketsPage() {
   }, [user]);
 
   useEffect(() => {
+    console.log('[DEBUG] TicketsPage useEffect triggered');
+    console.log('[DEBUG] User from context:', user);
+    console.log('[DEBUG] User role:', user?.role);
+    console.log('[DEBUG] User providerId:', user?.providerId);
     loadData();
   }, [loadData]);
 
